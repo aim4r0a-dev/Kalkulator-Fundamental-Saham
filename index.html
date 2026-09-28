@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Kalkulator Fundamental Saham</title>
+<style>
+  :root{
+    --paper:#F4EFE2;
+    --paper-dark:#E9E2CE;
+    --ink:#1F2A24;
+    --ink-soft:#5B6259;
+    --ledger:#2F5D4E;
+    --ledger-dark:#1E3D33;
+    --copper:#B4772F;
+    --copper-soft:#D9A25C;
+    --rule:#C9BE9F;
+    --bad:#9B3A34;
+    --good:#2F6F4E;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:Georgia, 'Times New Roman', serif;
+    padding:32px 16px 80px;
+  }
+  .wrap{max-width:920px;margin:0 auto;}
+  header{
+    text-align:center;
+    margin-bottom:28px;
+  }
+  header .eyebrow{
+    font-family:ui-monospace, 'SF Mono', Consolas, monospace;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    font-size:11px;
+    color:var(--copper);
+  }
+  header h1{
+    font-size:32px;
+    margin:6px 0 4px;
+    color:var(--ledger-dark);
+    letter-spacing:.01em;
+  }
+  header p{
+    font-family:system-ui, sans-serif;
+    color:var(--ink-soft);
+    font-size:14px;
+    margin:0;
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns:340px 1fr;
+    gap:24px;
+  }
+  @media (max-width: 760px){ .grid{grid-template-columns:1fr;} }
+
+  .card{
+    background:var(--paper);
+    border:1px solid var(--rule);
+    position:relative;
+  }
+  .ledger-card{
+    padding:22px 22px 18px;
+  }
+  .ledger-card::before{
+    content:"";
+    position:absolute;
+    top:0;left:0;right:0;
+    height:6px;
+    background:repeating-linear-gradient(90deg, var(--ledger) 0 10px, transparent 10px 20px);
+  }
+  .ledger-card h2{
+    font-size:15px;
+    text-transform:uppercase;
+    letter-spacing:.12em;
+    color:var(--ledger-dark);
+    margin:14px 0 16px;
+    border-bottom:1px solid var(--rule);
+    padding-bottom:8px;
+  }
+  .field{
+    margin-bottom:14px;
+  }
+  .field label{
+    display:block;
+    font-family:system-ui, sans-serif;
+    font-size:12.5px;
+    color:var(--ink-soft);
+    margin-bottom:4px;
+  }
+  .field label b{color:var(--ink);}
+  .field input{
+    width:100%;
+    padding:9px 10px;
+    border:1px solid var(--rule);
+    background:#FFFDF7;
+    font-family:ui-monospace, 'SF Mono', Consolas, monospace;
+    font-size:14px;
+    color:var(--ink);
+  }
+  .field input:focus{
+    outline:2px solid var(--copper-soft);
+    outline-offset:1px;
+  }
+  .hint{
+    font-family:system-ui, sans-serif;
+    font-size:11px;
+    color:var(--ink-soft);
+    margin-top:3px;
+  }
+  button{
+    width:100%;
+    margin-top:6px;
+    padding:12px;
+    background:var(--ledger);
+    color:#F4EFE2;
+    border:none;
+    font-family:system-ui, sans-serif;
+    font-weight:600;
+    letter-spacing:.05em;
+    text-transform:uppercase;
+    font-size:13px;
+    cursor:pointer;
+  }
+  button:hover{background:var(--ledger-dark);}
+  button:focus-visible{outline:2px solid var(--copper); outline-offset:2px;}
+
+  .presets{
+    display:flex;
+    gap:8px;
+    margin-bottom:16px;
+    flex-wrap:wrap;
+  }
+  .presets button{
+    width:auto;
+    flex:1;
+    background:transparent;
+    color:var(--ledger-dark);
+    border:1px solid var(--ledger);
+    padding:8px 10px;
+    font-size:11px;
+  }
+  .presets button:hover{background:var(--paper-dark);}
+
+  /* Results / receipt */
+  .receipt{
+    padding:0;
+    overflow:hidden;
+  }
+  .receipt .top{
+    background:var(--ledger-dark);
+    color:#F4EFE2;
+    padding:16px 22px;
+    font-family:system-ui, sans-serif;
+  }
+  .receipt .top .eyebrow{
+    font-family:ui-monospace, monospace;
+    font-size:10px;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:var(--copper-soft);
+  }
+  .receipt .top h2{
+    margin:4px 0 0;
+    font-size:18px;
+    font-family:Georgia, serif;
+  }
+  .empty-state{
+    padding:60px 30px;
+    text-align:center;
+    font-family:system-ui, sans-serif;
+    color:var(--ink-soft);
+    font-size:14px;
+  }
+  .rows{padding:6px 0;}
+  .row{
+    border-bottom:1px dashed var(--rule);
+  }
+  .row:last-child{border-bottom:none;}
+  .row-head{
+    width:100%;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:14px 22px;
+    background:none;
+    border:none;
+    cursor:pointer;
+    text-align:left;
+    color:var(--ink);
+    font-family:inherit;
+  }
+  .row-head:hover{background:var(--paper-dark);}
+  .row-head .label{
+    font-family:system-ui, sans-serif;
+    font-size:13px;
+    color:var(--ink-soft);
+    letter-spacing:.03em;
+  }
+  .row-head .ratio-name{
+    font-weight:700;
+    color:var(--ledger-dark);
+    font-size:15px;
+    margin-right:8px;
+  }
+  .row-head .value{
+    font-family:ui-monospace, monospace;
+    font-size:19px;
+    font-weight:700;
+    color:var(--copper);
+    white-space:nowrap;
+  }
+  .row-head .chev{
+    font-size:12px;
+    color:var(--ink-soft);
+    transition:transform .15s ease;
+  }
+  .row.open .chev{transform:rotate(90deg);}
+  .row-body{
+    display:none;
+    padding:2px 22px 20px 22px;
+    font-family:system-ui, sans-serif;
+    font-size:13.5px;
+    color:var(--ink);
+    line-height:1.55;
+  }
+  .row.open .row-body{display:block;}
+  .step{
+    margin:10px 0;
+    padding-left:14px;
+    border-left:2px solid var(--ledger);
+  }
+  .step .step-label{
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:var(--copper);
+    margin-bottom:2px;
+  }
+  .formula{
+    font-family:ui-monospace, monospace;
+    background:var(--paper-dark);
+    padding:8px 10px;
+    display:inline-block;
+    margin:2px 0;
+    font-size:13px;
+  }
+  .interpret{
+    margin-top:10px;
+    padding:10px 12px;
+    background:var(--paper-dark);
+    border-left:3px solid var(--good);
+    font-size:13px;
+  }
+  .interpret.bad{border-left-color:var(--bad);}
+  .foot{
+    padding:14px 22px;
+    font-family:system-ui, sans-serif;
+    font-size:11px;
+    color:var(--ink-soft);
+    border-top:1px solid var(--rule);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Analisis Rasio &middot; IDX</div>
+    <h1>Kalkulator Fundamental Saham</h1>
+    <p>Masukkan data laporan keuangan &mdash; lihat hasil sekaligus rumus &amp; langkah perhitungannya.</p>
+  </header>
+
+  <div class="grid">
+    <!-- INPUT -->
+    <div class="card ledger-card">
+      <div class="presets">
+        <button type="button" id="presetBBCA">Contoh: BBCA</button>
+        <button type="button" id="presetReset">Kosongkan</button>
+      </div>
+      <h2>Data Keuangan</h2>
+
+      <div class="field">
+        <label>Nama emiten <b>(opsional)</b></label>
+        <input type="text" id="nama" placeholder="Mis. BBCA">
+      </div>
+      <div class="field">
+        <label>Harga saham saat ini (Rp)</label>
+        <input type="number" id="harga" placeholder="Mis. 9800">
+      </div>
+      <div class="field">
+        <label>Laba bersih setahun (Rp)</label>
+        <input type="number" id="laba" placeholder="Mis. 48000000000000">
+        <div class="hint">Net income, dari laporan laba rugi</div>
+      </div>
+      <div class="field">
+        <label>Jumlah saham beredar (lembar)</label>
+        <input type="number" id="jumlahSaham" placeholder="Mis. 24655010000">
+      </div>
+      <div class="field">
+        <label>Total ekuitas (Rp)</label>
+        <input type="number" id="ekuitas" placeholder="Mis. 200000000000000">
+        <div class="hint">Total equity, dari neraca</div>
+      </div>
+      <div class="field">
+        <label>Total aset (Rp)</label>
+        <input type="number" id="aset" placeholder="Mis. 1400000000000000">
+      </div>
+      <div class="field">
+        <label>Total liabilitas / utang (Rp)</label>
+        <input type="number" id="liabilitas" placeholder="Mis. 1200000000000000">
+      </div>
+
+      <button type="button" id="hitungBtn">Hitung Rasio</button>
+    </div>
+
+    <!-- RESULTS -->
+    <div class="card receipt">
+      <div class="top">
+        <div class="eyebrow">Hasil Perhitungan</div>
+        <h2 id="resultTitle">Belum ada data</h2>
+      </div>
+      <div id="resultBody">
+        <div class="empty-state">Isi data di sebelah kiri lalu klik "Hitung Rasio".<br>Klik tiap baris hasil untuk melihat rumus &amp; langkah pengerjaannya.</div>
+      </div>
+      <div class="foot">Ketuk baris rasio manapun untuk membuka rincian rumus dan substitusi angka.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+function fmt(n, decimals){
+  if(!isFinite(n)) return '—';
+  return n.toLocaleString('id-ID', {minimumFractionDigits:decimals, maximumFractionDigits:decimals});
+}
+function fmtRp(n){
+  if(!isFinite(n)) return '—';
+  return 'Rp' + n.toLocaleString('id-ID', {maximumFractionDigits:0});
+}
+
+document.getElementById('presetBBCA').addEventListener('click', function(){
+  document.getElementById('nama').value = 'BBCA';
+  document.getElementById('harga').value = 9800;
+  document.getElementById('laba').value = 48000000000000;
+  document.getElementById('jumlahSaham').value = 24655010000;
+  document.getElementById('ekuitas').value = 200000000000000;
+  document.getElementById('aset').value = 1400000000000000;
+  document.getElementById('liabilitas').value = 1200000000000000;
+});
+document.getElementById('presetReset').addEventListener('click', function(){
+  ['nama','harga','laba','jumlahSaham','ekuitas','aset','liabilitas'].forEach(function(id){
+    document.getElementById(id).value = '';
+  });
+});
+
+document.getElementById('hitungBtn').addEventListener('click', hitung);
+
+function hitung(){
+  var nama = document.getElementById('nama').value.trim() || 'Emiten';
+  var harga = parseFloat(document.getElementById('harga').value);
+  var laba = parseFloat(document.getElementById('laba').value);
+  var jumlahSaham = parseFloat(document.getElementById('jumlahSaham').value);
+  var ekuitas = parseFloat(document.getElementById('ekuitas').value);
+  var aset = parseFloat(document.getElementById('aset').value);
+  var liabilitas = parseFloat(document.getElementById('liabilitas').value);
+
+  var required = {harga:harga, laba:laba, jumlahSaham:jumlahSaham, ekuitas:ekuitas, aset:aset, liabilitas:liabilitas};
+  for(var k in required){
+    if(isNaN(required[k])){
+      document.getElementById('resultTitle').textContent = 'Data belum lengkap';
+      document.getElementById('resultBody').innerHTML = '<div class="empty-state">Lengkapi semua kolom angka terlebih dahulu (semua field wajib diisi).</div>';
+      return;
+    }
+  }
+
+  var eps = laba / jumlahSaham;
+  var per = eps !== 0 ? harga / eps : Infinity;
+  var bvps = ekuitas / jumlahSaham;
+  var pbv = bvps !== 0 ? harga / bvps : Infinity;
+  var roe = (laba / ekuitas) * 100;
+  var roa = (laba / aset) * 100;
+  var der = liabilitas / ekuitas;
+
+  document.getElementById('resultTitle').textContent = nama;
+
+  var rows = [
+    {
+      key:'eps', name:'EPS', sub:'Earning Per Share', value: fmtRp(eps),
+      steps:[
+        {label:'Rumus', formula:'EPS = Laba Bersih ÷ Jumlah Saham Beredar'},
+        {label:'Substitusi', formula:'EPS = ' + fmtRp(laba) + ' ÷ ' + fmt(jumlahSaham,0) + ' lembar'},
+        {label:'Hasil', formula:'EPS = ' + fmtRp(eps) + ' per lembar'}
+      ],
+      interpret: 'EPS menunjukkan berapa besar laba yang "dihasilkan" untuk tiap satu lembar saham. Semakin tinggi EPS (dan konsisten naik tiap tahun), semakin baik profitabilitas per lembarnya.',
+      bad:false
+    },
+    {
+      key:'per', name:'PER', sub:'Price to Earning Ratio', value: fmt(per,2) + 'x',
+      steps:[
+        {label:'Rumus', formula:'PER = Harga Saham ÷ EPS'},
+        {label:'Substitusi', formula:'PER = ' + fmtRp(harga) + ' ÷ ' + fmtRp(eps)},
+        {label:'Hasil', formula:'PER = ' + fmt(per,2) + 'x'}
+      ],
+      interpret: per < 15 ? 'PER di bawah ~15x sering dianggap relatif murah dibanding rata-rata pasar, tapi tetap bandingkan dengan PER rata-rata sektor/industrinya.' : 'PER di atas ~15x bisa berarti pasar menilai saham ini mahal, atau pasar mengekspektasikan pertumbuhan laba yang tinggi ke depan. Bandingkan dengan PER sektor sejenis.',
+      bad: per >= 15
+    },
+    {
+      key:'pbv', name:'PBV', sub:'Price to Book Value', value: fmt(pbv,2) + 'x',
+      steps:[
+        {label:'Langkah 1: Cari Book Value Per Share (BVPS)', formula:'BVPS = Total Ekuitas ÷ Jumlah Saham Beredar'},
+        {label:'Substitusi BVPS', formula:'BVPS = ' + fmtRp(ekuitas) + ' ÷ ' + fmt(jumlahSaham,0) + ' = ' + fmtRp(bvps)},
+        {label:'Langkah 2: Rumus PBV', formula:'PBV = Harga Saham ÷ BVPS'},
+        {label:'Substitusi PBV', formula:'PBV = ' + fmtRp(harga) + ' ÷ ' + fmtRp(bvps)},
+        {label:'Hasil', formula:'PBV = ' + fmt(pbv,2) + 'x'}
+      ],
+      interpret: pbv < 1 ? 'PBV di bawah 1x berarti harga saham lebih rendah dari nilai buku (aset bersih) perusahaan — bisa jadi indikasi undervalued, atau pasar meragukan kualitas asetnya.' : 'PBV di atas 1x berarti pasar menghargai saham lebih tinggi dari nilai buku bersihnya, biasanya karena ekspektasi pertumbuhan atau profitabilitas yang kuat (mis. ROE tinggi).',
+      bad: false
+    },
+    {
+      key:'roe', name:'ROE', sub:'Return on Equity', value: fmt(roe,2) + '%',
+      steps:[
+        {label:'Rumus', formula:'ROE = (Laba Bersih ÷ Total Ekuitas) × 100%'},
+        {label:'Substitusi', formula:'ROE = (' + fmtRp(laba) + ' ÷ ' + fmtRp(ekuitas) + ') × 100%'},
+        {label:'Hasil', formula:'ROE = ' + fmt(roe,2) + '%'}
+      ],
+      interpret: roe >= 15 ? 'ROE di atas ~15% umumnya dianggap bagus, menandakan perusahaan efisien menghasilkan laba dari modal pemegang saham.' : 'ROE di bawah ~15% menandakan efisiensi penggunaan ekuitas relatif lebih rendah — bandingkan dengan rata-rata perusahaan sejenis di sektornya.',
+      bad: roe < 15
+    },
+    {
+      key:'roa', name:'ROA', sub:'Return on Assets', value: fmt(roa,2) + '%',
+      steps:[
+        {label:'Rumus', formula:'ROA = (Laba Bersih ÷ Total Aset) × 100%'},
+        {label:'Substitusi', formula:'ROA = (' + fmtRp(laba) + ' ÷ ' + fmtRp(aset) + ') × 100%'},
+        {label:'Hasil', formula:'ROA = ' + fmt(roa,2) + '%'}
+      ],
+      interpret: roa >= 2 ? 'ROA yang lebih tinggi menunjukkan perusahaan makin efisien mengubah total asetnya menjadi laba (patokan sangat bergantung sektor — bank misalnya wajar punya ROA lebih rendah dari perusahaan consumer goods).' : 'ROA yang rendah bisa wajar untuk sektor padat aset seperti perbankan/infrastruktur, tapi tetap perlu dibandingkan dengan kompetitor sejenis.',
+      bad: false
+    },
+    {
+      key:'der', name:'DER', sub:'Debt to Equity Ratio', value: fmt(der,2) + 'x',
+      steps:[
+        {label:'Rumus', formula:'DER = Total Liabilitas ÷ Total Ekuitas'},
+        {label:'Substitusi', formula:'DER = ' + fmtRp(liabilitas) + ' ÷ ' + fmtRp(ekuitas)},
+        {label:'Hasil', formula:'DER = ' + fmt(der,2) + 'x'}
+      ],
+      interpret: der <= 1 ? 'DER ≤ 1x berarti utang perusahaan masih lebih kecil dari ekuitasnya — struktur permodalan relatif konservatif (di luar sektor perbankan yang memang wajar punya DER tinggi).' : 'DER di atas 1x berarti utang lebih besar dari ekuitas. Untuk perusahaan non-bank, ini perlu dicermati risikonya; untuk bank, DER tinggi adalah hal yang wajar karena model bisnisnya.',
+      bad: der > 1
+    }
+  ];
+
+  var html = '<div class="rows">';
+  rows.forEach(function(r, idx){
+    html += '<div class="row" id="row-'+r.key+'">';
+    html += '<button type="button" class="row-head" onclick="toggleRow(\''+r.key+'\')">';
+    html += '<span><span class="ratio-name">'+r.name+'</span><span class="label">'+r.sub+'</span></span>';
+    html += '<span style="display:flex;align-items:center;gap:10px;"><span class="value">'+r.value+'</span><span class="chev">&#9656;</span></span>';
+    html += '</button>';
+    html += '<div class="row-body">';
+    r.steps.forEach(function(s){
+      html += '<div class="step"><div class="step-label">'+s.label+'</div><div class="formula">'+s.formula+'</div></div>';
+    });
+    html += '<div class="interpret'+(r.bad?' bad':'')+'">'+r.interpret+'</div>';
+    html += '</div></div>';
+  });
+  html += '</div>';
+
+  document.getElementById('resultBody').innerHTML = html;
+}
+
+function toggleRow(key){
+  var row = document.getElementById('row-'+key);
+  if(row) row.classList.toggle('open');
+}
+</script>
+</body>
+</html>
